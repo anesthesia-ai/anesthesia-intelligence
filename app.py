@@ -22,18 +22,45 @@ st.markdown("""
     <style>
       body { animation: fadeIn 1s ease-in; }
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-      div.card:hover { transform: scale(1.01); transition: all 0.3s ease-in-out; }
-      .divider { border-top: 1px solid #ddd; margin: 30px 0; animation: fadeIn 2s; }
-      button:hover { background-color: #45a049 !important; }
-      @media (prefers-color-scheme: dark) {
-        body { background-color: #0e1117; color: white; }
-        div.card { background-color: #222; color: white; }
-        .footer { background-color: #333; color: white; }
+      .flex-container {
+        display: flex;
+        align-items: center;
+        background-color: #2c2f36;
+        border-radius: 24px;
+        padding: 10px;
+        margin: auto;
+        width: 100%;
+        max-width: 700px;
       }
-      @media (prefers-color-scheme: light) {
-        body { background-color: white; color: black; }
-        div.card { background-color: #f9f9f9; color: black; }
-        .footer { background-color: #f0f0f0; color: black; }
+      .flex-container input[type="text"] {
+        flex: 1;
+        margin: 0 10px;
+        padding: 10px;
+        border: none;
+        background-color: transparent;
+        color: white;
+        font-size: 16px;
+      }
+      .flex-container input[type="file"] {
+        display: none;
+      }
+      .upload-label, .mic-button {
+        background: none;
+        border: none;
+        cursor: pointer;
+        font-size: 20px;
+        color: white;
+      }
+      .thumbnail {
+        height: 30px;
+        width: 30px;
+        object-fit: cover;
+        border-radius: 6px;
+        margin-right: 10px;
+      }
+      .footer {
+        background-color: #333;
+        color: white;
       }
     </style>
 """, unsafe_allow_html=True)
@@ -53,76 +80,82 @@ st.markdown("""
 # ----------------------
 # Unified Upload + Text Input
 # ----------------------
-with st.container():
-    st.markdown("""
-    <div class="card" style="padding: 20px; border-radius: 12px; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); width: 100%; max-width: 700px; margin: auto;">
-    """, unsafe_allow_html=True)
+uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed")
 
-    uploaded_file = None
-    extracted_text = ""
+uploaded_thumbnail = ""
+if uploaded_file is not None and uploaded_file.type.startswith("image/"):
+    image = Image.open(uploaded_file)
+    image.thumbnail((30, 30))
+    buf = io.BytesIO()
+    image.save(buf, format="PNG")
+    uploaded_thumbnail = buf.getvalue()
 
-    col1, col2, col3 = st.columns([1,6,1])
+flex_content = """
+<div class="flex-container">
+  <label for="file-upload" class="upload-label">➕</label>
+"""
 
-    with col1:
-        uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed")
+if uploaded_thumbnail:
+    flex_content += """
+    <img src="data:image/png;base64,""" + st.base64.b64encode(uploaded_thumbnail).decode() + """" class="thumbnail"/>
+    """
 
-    with col2:
-        prompt = st.text_input(
-            "", placeholder="Type your question here..."
-        )
+flex_content += """
+  <input id="text-input" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
+  <button class="mic-button">🎤</button>
+</div>
+"""
 
-    with col3:
-        st.button("🎤", help="Voice input coming soon!", use_container_width=True)
+st.markdown(flex_content, unsafe_allow_html=True)
 
-    if uploaded_file is not None:
-        with st.spinner("🔄 Processing file..."):
-            if uploaded_file.type.startswith("image/"):
-                image = Image.open(uploaded_file)
-                extracted_text = pytesseract.image_to_string(image)
-            elif uploaded_file.type == "application/pdf":
-                extracted_text = "PDF file uploaded. Please summarize its contents in your query."
+prompt = st.text_input("", label_visibility="collapsed")
 
-        st.image(uploaded_file, width=100)
-        st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
+extracted_text = ""
 
-    submit = st.button("⏳ Submit Question", use_container_width=True)
+if uploaded_file is not None:
+    with st.spinner("🔄 Processing file..."):
+        if uploaded_file.type.startswith("image/"):
+            image = Image.open(uploaded_file)
+            extracted_text = pytesseract.image_to_string(image)
+        elif uploaded_file.type == "application/pdf":
+            extracted_text = "PDF file uploaded. Please summarize its contents in your query."
 
-    if submit:
-        if not prompt and not uploaded_file:
-            st.warning("Please enter a question or upload a file.")
-        else:
-            full_prompt = prompt
-            if extracted_text:
-                full_prompt = f"User provided the following file contents: {extracted_text}\n\nAdditionally, user asked: {prompt}"
+submit = st.button("⏳ Submit Question", use_container_width=True)
 
-            with st.spinner("🔄 Thinking..."):
+if submit:
+    if not prompt and not uploaded_file:
+        st.warning("Please enter a question or upload a file.")
+    else:
+        full_prompt = prompt
+        if extracted_text:
+            full_prompt = f"User provided the following file contents: {extracted_text}\n\nAdditionally, user asked: {prompt}"
+
+        with st.spinner("🔄 Thinking..."):
+            try:
                 try:
-                    try:
+                    response = client.chat.completions.create(
+                        model="gpt-4",
+                        messages=[
+                            {"role": "system", "content": "You are an expert CRNA and Critical Care Consultant. Help interpret uploaded files and answer based on clinical best practices."},
+                            {"role": "user", "content": full_prompt}
+                        ]
+                    )
+                except openai.APIError as e:
+                    if "model_not_found" in str(e) or "You do not have access" in str(e):
+                        st.warning("🔄 GPT-4 not available. Falling back to GPT-3.5-turbo.")
                         response = client.chat.completions.create(
-                            model="gpt-4",
+                            model="gpt-3.5-turbo",
                             messages=[
                                 {"role": "system", "content": "You are an expert CRNA and Critical Care Consultant. Help interpret uploaded files and answer based on clinical best practices."},
                                 {"role": "user", "content": full_prompt}
                             ]
                         )
-                    except openai.APIError as e:
-                        if "model_not_found" in str(e) or "You do not have access" in str(e):
-                            st.warning("🔄 GPT-4 not available. Falling back to GPT-3.5-turbo.")
-                            response = client.chat.completions.create(
-                                model="gpt-3.5-turbo",
-                                messages=[
-                                    {"role": "system", "content": "You are an expert CRNA and Critical Care Consultant. Help interpret uploaded files and answer based on clinical best practices."},
-                                    {"role": "user", "content": full_prompt}
-                                ]
-                            )
-                        else:
-                            raise e
-                    st.success("✅ Response ready!")
-                    st.write(response.choices[0].message.content)
-                except Exception as e:
-                    st.error(f"❌ An error occurred: {str(e)}")
-
-    st.markdown("</div>", unsafe_allow_html=True)
+                    else:
+                        raise e
+                st.success("✅ Response ready!")
+                st.write(response.choices[0].message.content)
+            except Exception as e:
+                st.error(f"❌ An error occurred: {str(e)}")
 
 # ----------------------
 # Privacy Notice (footer)
