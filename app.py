@@ -24,10 +24,16 @@ st.title("Ask Me Anything: Anesthesia + Critical Care")
 st.info("💡 Privacy Reminder: Please do not upload PHI (Protected Health Information). Files are processed temporarily and not stored permanently.")
 
 # ----------------------
-# Layout with upload and text input inside a container
+# Styled container for upload and text input
 # ----------------------
 with st.container():
-    st.markdown("### 📂 Upload Section")
+    st.markdown(
+        """
+        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px;">
+        """,
+        unsafe_allow_html=True
+    )
+
     uploaded_file = st.file_uploader("Upload EKGs, TEGs, Medications List, etc.", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed")
 
     extracted_text = ""
@@ -45,6 +51,8 @@ with st.container():
         label="",
         placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')..."
     )
+
+    st.markdown("</div>", unsafe_allow_html=True)
 
 # ----------------------
 # Submit Button
