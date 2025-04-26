@@ -107,32 +107,29 @@ st.markdown("""
 # ----------------------
 # Unified Upload + Text Input
 # ----------------------
-placeholder = st.empty()
-uploaded_file = placeholder.file_uploader("", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed", key="hidden-upload")
+with st.container():
+    uploaded_file = st.file_uploader("Upload", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed", key="upload", accept_multiple_files=False)
 
-if uploaded_file:
-    if uploaded_file.type.startswith("image/"):
-        image = Image.open(uploaded_file)
-        buf = io.BytesIO()
-        image.save(buf, format="PNG")
-        byte_im = buf.getvalue()
-        encoded = base64.b64encode(byte_im).decode()
-        upload_html = f'<img src="data:image/png;base64,{encoded}" class="thumbnail">'
-    else:
-        upload_html = '<span class="upload-label">📄</span>'
-else:
-    upload_html = '<span class="upload-label">➕</span>'
+    upload_html = '<label class="upload-label">➕</label>'
 
-st.markdown(f"""
-<div class="flex-container">
-  {upload_html}
-  <input id="text-input" name="prompt" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
-  <button class="mic-button" disabled>🎤</button>
-  <div style="position:absolute;top:10px;left:10px;width:40px;height:40px;opacity:0;z-index:20;">
-    {placeholder}
-  </div>
-</div>
-""", unsafe_allow_html=True)
+    if uploaded_file:
+        if uploaded_file.type.startswith("image/"):
+            image = Image.open(uploaded_file)
+            buf = io.BytesIO()
+            image.save(buf, format="PNG")
+            byte_im = buf.getvalue()
+            encoded = base64.b64encode(byte_im).decode()
+            upload_html = f'<img src="data:image/png;base64,{encoded}" class="thumbnail">'
+        else:
+            upload_html = '<span class="upload-label">📄</span>'
+
+    st.markdown(f"""
+    <div class="flex-container">
+      {upload_html}
+      <input id="text-input" name="prompt" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
+      <button class="mic-button" disabled>🎤</button>
+    </div>
+    """, unsafe_allow_html=True)
 
 submit = st.button("🚀 Ask The A.I.", key="ask_button", use_container_width=True)
 
