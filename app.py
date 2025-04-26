@@ -92,7 +92,7 @@ st.markdown("""
 <div class="flex-container">
   <input type="file" id="hidden-upload" accept="image/*,application/pdf" style="display:none" onchange="uploadFile(event)">
   <label for="hidden-upload" class="upload-label">➕</label>
-  <input id="text-input" name="prompt" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
+  <input id="text-input" name="prompt" type="text" placeholder="Interpret this TEG, EKG, or Labs','Make care plan an EGD for EF <20% on an LVAD and Milrinone drip">
   <button class="mic-button" disabled>🎤</button>
 </div>
 <script>
@@ -112,7 +112,7 @@ function uploadFile(event) {
 </script>
 """, unsafe_allow_html=True)
 
-submit = st.button("⏳ Submit Question", use_container_width=True)
+submit = st.button("Ask The A.I.", use_container_width=True)
 
 # ----------------------
 # Privacy Notice (footer)
