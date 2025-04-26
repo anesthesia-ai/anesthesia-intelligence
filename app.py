@@ -28,25 +28,25 @@ st.markdown("""
         align-items: center;
         background-color: #2c2f36;
         border-radius: 24px;
-        padding: 10px;
+        padding: 15px;
         margin: auto;
         width: 100%;
-        max-width: 700px;
+        max-width: 900px;
       }
       .flex-container input[type="text"] {
         flex: 1;
         margin: 0 10px;
-        padding: 10px;
+        padding: 15px;
         border: none;
         background-color: transparent;
         color: white;
-        font-size: 16px;
+        font-size: 18px;
       }
       .upload-label, .mic-button {
         background: none;
         border: none;
         cursor: pointer;
-        font-size: 20px;
+        font-size: 24px;
         color: white;
       }
       .mic-button:disabled {
@@ -54,8 +54,8 @@ st.markdown("""
         cursor: not-allowed;
       }
       .thumbnail {
-        height: 30px;
-        width: 30px;
+        height: 40px;
+        width: 40px;
         object-fit: cover;
         border-radius: 6px;
         margin-right: 10px;
@@ -91,8 +91,8 @@ st.markdown("""
 st.markdown("""
 <div class="flex-container">
   <input type="file" id="hidden-upload" accept="image/*,application/pdf" style="display:none" onchange="uploadFile(event)">
-  <label for="hidden-upload" class="upload-label">➕</label>
-  <input id="text-input" name="prompt" type="text" placeholder="Interpret this TEG, EKG, or Labs','Make care plan an EGD for EF <20% on an LVAD and Milrinone drip">
+  <label for="hidden-upload" class="upload-label" id="upload-icon">➕</label>
+  <input id="text-input" name="prompt" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
   <button class="mic-button" disabled>🎤</button>
 </div>
 <script>
@@ -104,7 +104,8 @@ function uploadFile(event) {
       const imgTag = document.createElement('img');
       imgTag.src = e.target.result;
       imgTag.className = 'thumbnail';
-      document.querySelector('.upload-label').replaceWith(imgTag);
+      const uploadIcon = document.getElementById('upload-icon');
+      uploadIcon.parentNode.replaceChild(imgTag, uploadIcon);
     }
     reader.readAsDataURL(file);
   }
@@ -112,7 +113,7 @@ function uploadFile(event) {
 </script>
 """, unsafe_allow_html=True)
 
-submit = st.button("Ask The A.I.", use_container_width=True)
+submit = st.button("🚀 Ask The A.I.", use_container_width=True)
 
 # ----------------------
 # Privacy Notice (footer)
