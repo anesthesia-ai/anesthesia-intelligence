@@ -14,50 +14,69 @@ if "OPENAI_API_KEY" not in st.secrets:
 client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 
 # ----------------------
-# Title
+# Inject custom Google Font
 # ----------------------
-st.title("Ask Me Anything: Anesthesia + Critical Care")
+st.markdown(
+    """
+    <link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+    """,
+    unsafe_allow_html=True
+)
 
 # ----------------------
-# Privacy Notice
+# Title and Subtitle
 # ----------------------
-st.info("💡 Privacy Reminder: Please do not upload PHI (Protected Health Information). Files are processed temporarily and not stored permanently.")
+st.markdown("""
+<div style='text-align: center; margin-bottom: 30px;'>
+    <h1 style='font-weight: normal; margin-bottom: 10px;'>Anesthesia <span style='font-size: 80px; color: black; margin: 0 10px;'>.</span> Intelligence</h1>
+    <div style='font-family: "Pacifico", cursive; font-size: 20px; color: #555;'>A.I</div>
+</div>
+""", unsafe_allow_html=True)
 
 # ----------------------
-# Styled container for upload and text input
+# Centered styled container for upload and text input
 # ----------------------
-with st.container():
-    st.markdown(
-        """
-        <div style="background-color: #f9f9f9; padding: 20px; border-radius: 10px;">
-        """,
-        unsafe_allow_html=True
-    )
+st.markdown("""
+<div style='display: flex; justify-content: center;'>
+    <div style="background-color: #f9f9f9; padding: 30px; border-radius: 12px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1); width: 100%; max-width: 700px;">
+""", unsafe_allow_html=True)
 
-    uploaded_file = st.file_uploader("Upload EKGs, TEGs, Medications List, etc.", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed")
+uploaded_file = st.file_uploader("Upload EKGs, TEGs, Medications List, etc.", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed")
 
-    extracted_text = ""
-    if uploaded_file is not None:
-        st.success(f"📄 {uploaded_file.name} uploaded successfully!")
-        if uploaded_file.type.startswith("image/"):
-            st.image(uploaded_file)
-            image = Image.open(uploaded_file)
-            extracted_text = pytesseract.image_to_string(image)
-        elif uploaded_file.type == "application/pdf":
-            st.write("PDF uploaded. (Preview not shown)")
-            extracted_text = "PDF file uploaded. Please summarize its contents in your query."
+extracted_text = ""
+if uploaded_file is not None:
+    st.success(f"📄 {uploaded_file.name} uploaded successfully!")
+    if uploaded_file.type.startswith("image/"):
+        st.image(uploaded_file)
+        image = Image.open(uploaded_file)
+        extracted_text = pytesseract.image_to_string(image)
+    elif uploaded_file.type == "application/pdf":
+        st.write("PDF uploaded. (Preview not shown)")
+        extracted_text = "PDF file uploaded. Please summarize its contents in your query."
 
-    prompt = st.text_area(
-        label="",
-        placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')..."
-    )
-
-    st.markdown("</div>", unsafe_allow_html=True)
+prompt = st.text_area(
+    label="",
+    placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...",
+    height=150
+)
 
 # ----------------------
 # Submit Button
 # ----------------------
-if st.button("⏳ Submit Question"):
+st.markdown("""
+<div style='display: flex; justify-content: center; margin-top: 20px;'>
+    <button style="background-color: #4CAF50; color: white; padding: 10px 24px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; transition: background-color 0.3s;">
+        ⏳ Submit Question
+    </button>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+if st.button("Submit"):
     if not prompt and not uploaded_file:
         st.warning("Please enter a question or upload a file.")
     else:
@@ -91,3 +110,15 @@ if st.button("⏳ Submit Question"):
                 st.write(response.choices[0].message.content)
             except Exception as e:
                 st.error(f"❌ An error occurred: {str(e)}")
+
+# ----------------------
+# Privacy Notice (footer)
+# ----------------------
+st.markdown(
+    """
+    <div style="background-color: #f0f0f0; padding: 10px; border-radius: 5px; font-size: 12px; text-align: center; margin-top: 30px;">
+    ⚡ Privacy Reminder: Please do not upload PHI (Protected Health Information). Files are processed temporarily and not stored permanently.
+    </div>
+    """,
+    unsafe_allow_html=True
+)
