@@ -75,15 +75,8 @@ st.markdown("""
         background-color: #3d8bfd;
         transition: background-color 0.3s ease;
       }
-      .hidden-upload {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 40px;
-        height: 40px;
-        opacity: 0;
-        cursor: pointer;
-        z-index: 10;
+      .stFileUploader > div:first-child {
+        display: none;
       }
       .footer {
         background-color: #333;
@@ -128,12 +121,7 @@ if uploaded_file:
 # ----------------------
 st.markdown(f"""
 <div class="flex-container">
-  <div style="position: relative;">
-    {upload_html}
-    <div style="position: absolute; top: 0; left: 0; width: 40px; height: 40px; opacity: 0;">
-        {placeholder}
-    </div>
-  </div>
+  {upload_html}
   <input id="text-input" name="prompt" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
   <button class="mic-button" disabled>🎤</button>
 </div>
