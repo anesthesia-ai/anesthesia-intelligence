@@ -51,36 +51,41 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # ----------------------
-# Centered styled container for upload and text input
+# Unified Upload + Text Input
 # ----------------------
 with st.container():
     st.markdown("""
-    <div class="card" style="padding: 30px; border-radius: 12px; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); width: 100%; max-width: 700px; margin: auto;">
+    <div class="card" style="padding: 20px; border-radius: 12px; box-shadow: 0 6px 15px rgba(0, 0, 0, 0.15); width: 100%; max-width: 700px; margin: auto;">
     """, unsafe_allow_html=True)
 
-    uploaded_file = st.file_uploader("Upload EKGs, TEGs, Medications List, etc.", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed")
-
+    uploaded_file = None
     extracted_text = ""
+
+    col1, col2, col3 = st.columns([1,6,1])
+
+    with col1:
+        uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed")
+
+    with col2:
+        prompt = st.text_input(
+            "", placeholder="Type your question here..."
+        )
+
+    with col3:
+        st.button("🎤", help="Voice input coming soon!", use_container_width=True)
+
     if uploaded_file is not None:
         with st.spinner("🔄 Processing file..."):
-            st.success(f"📄 {uploaded_file.name} uploaded successfully!")
             if uploaded_file.type.startswith("image/"):
-                st.image(uploaded_file)
                 image = Image.open(uploaded_file)
                 extracted_text = pytesseract.image_to_string(image)
             elif uploaded_file.type == "application/pdf":
-                st.write("PDF uploaded. (Preview not shown)")
                 extracted_text = "PDF file uploaded. Please summarize its contents in your query."
 
+        st.image(uploaded_file, width=100)
         st.markdown("<div class='divider'></div>", unsafe_allow_html=True)
 
-    prompt = st.text_area(
-        label="",
-        placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...",
-        height=150
-    )
-
-    submit = st.button("⏳ Submit Question")
+    submit = st.button("⏳ Submit Question", use_container_width=True)
 
     if submit:
         if not prompt and not uploaded_file:
