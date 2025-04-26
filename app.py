@@ -23,6 +23,7 @@ st.markdown("""
     <style>
       body { animation: fadeIn 1s ease-in; }
       @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+      div[data-testid="stFileUploader"] { visibility: hidden; height: 0px; overflow: hidden; position: absolute; }
       .flex-container {
         display: flex;
         align-items: center;
@@ -74,9 +75,6 @@ st.markdown("""
       .ask-button:hover {
         background-color: #3d8bfd;
         transition: background-color 0.3s ease;
-      }
-      .stFileUploader > div:first-child {
-        display: none;
       }
       .footer {
         background-color: #333;
