@@ -32,15 +32,16 @@ st.markdown("""
         margin: auto;
         width: 100%;
         max-width: 900px;
+        box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.1);
       }
       .flex-container input[type="text"] {
         flex: 1;
         margin: 0 10px;
-        padding: 15px;
+        padding: 20px;
         border: none;
         background-color: transparent;
         color: white;
-        font-size: 18px;
+        font-size: 20px;
       }
       .upload-label, .mic-button {
         background: none;
@@ -48,6 +49,10 @@ st.markdown("""
         cursor: pointer;
         font-size: 24px;
         color: white;
+        transition: 0.3s;
+      }
+      .upload-label:hover, .mic-button:hover {
+        filter: brightness(1.2);
       }
       .mic-button:disabled {
         color: gray;
@@ -59,12 +64,15 @@ st.markdown("""
         object-fit: cover;
         border-radius: 6px;
         margin-right: 10px;
-        animation: bounceIn 0.5s;
+        animation: fadeIn 0.5s;
       }
-      @keyframes bounceIn {
-        0% { transform: scale(0.5); opacity: 0; }
-        50% { transform: scale(1.2); opacity: 1; }
-        100% { transform: scale(1); }
+      @keyframes fadeIn {
+        from { opacity: 0; }
+        to { opacity: 1; }
+      }
+      .ask-button:hover {
+        background-color: #3d8bfd;
+        transition: background-color 0.3s ease;
       }
       .footer {
         background-color: #333;
@@ -113,7 +121,7 @@ function uploadFile(event) {
 </script>
 """, unsafe_allow_html=True)
 
-submit = st.button("🚀 Ask The A.I.", use_container_width=True)
+submit = st.button("🚀 Ask The A.I.", key="ask_button", use_container_width=True)
 
 # ----------------------
 # Privacy Notice (footer)
