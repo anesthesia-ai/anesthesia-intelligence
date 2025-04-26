@@ -49,12 +49,22 @@ st.markdown("""
         font-size: 20px;
         color: white;
       }
+      .mic-button:disabled {
+        color: gray;
+        cursor: not-allowed;
+      }
       .thumbnail {
         height: 30px;
         width: 30px;
         object-fit: cover;
         border-radius: 6px;
         margin-right: 10px;
+        animation: bounceIn 0.5s;
+      }
+      @keyframes bounceIn {
+        0% { transform: scale(0.5); opacity: 0; }
+        50% { transform: scale(1.2); opacity: 1; }
+        100% { transform: scale(1); }
       }
       .footer {
         background-color: #333;
@@ -78,16 +88,12 @@ st.markdown("""
 # ----------------------
 # Unified Upload + Text Input
 # ----------------------
-extracted_text = ""
-uploaded_thumbnail = ""
-prompt = ""
-
 st.markdown("""
 <div class="flex-container">
   <input type="file" id="hidden-upload" accept="image/*,application/pdf" style="display:none" onchange="uploadFile(event)">
   <label for="hidden-upload" class="upload-label">➕</label>
   <input id="text-input" name="prompt" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
-  <button class="mic-button">🎤</button>
+  <button class="mic-button" disabled>🎤</button>
 </div>
 <script>
 function uploadFile(event) {
@@ -108,44 +114,11 @@ function uploadFile(event) {
 
 submit = st.button("⏳ Submit Question", use_container_width=True)
 
-if submit:
-    if not prompt:
-        st.warning("Please enter a question or upload a file.")
-    else:
-        full_prompt = prompt
-
-        with st.spinner("🔄 Thinking..."):
-            try:
-                try:
-                    response = client.chat.completions.create(
-                        model="gpt-4",
-                        messages=[
-                            {"role": "system", "content": "You are an expert CRNA and Critical Care Consultant. Help interpret uploaded files and answer based on clinical best practices."},
-                            {"role": "user", "content": full_prompt}
-                        ]
-                    )
-                except openai.APIError as e:
-                    if "model_not_found" in str(e) or "You do not have access" in str(e):
-                        st.warning("🔄 GPT-4 not available. Falling back to GPT-3.5-turbo.")
-                        response = client.chat.completions.create(
-                            model="gpt-3.5-turbo",
-                            messages=[
-                                {"role": "system", "content": "You are an expert CRNA and Critical Care Consultant. Help interpret uploaded files and answer based on clinical best practices."},
-                                {"role": "user", "content": full_prompt}
-                            ]
-                        )
-                    else:
-                        raise e
-                st.success("✅ Response ready!")
-                st.write(response.choices[0].message.content)
-            except Exception as e:
-                st.error(f"❌ An error occurred: {str(e)}")
-
 # ----------------------
 # Privacy Notice (footer)
 # ----------------------
 st.markdown("""
-<div class="footer" style="padding: 12px; border-radius: 8px; font-size: 12px; text-align: center; margin-top: 40px;">
+<div class="footer" style="padding: 12px; border-radius: 8px; font-size: 12px; text-align: center; margin-top: 40px;'>
 ⚡ Privacy Reminder: Please do not upload PHI (Protected Health Information). Files are processed temporarily and not stored permanently.
 </div>
 """, unsafe_allow_html=True)
