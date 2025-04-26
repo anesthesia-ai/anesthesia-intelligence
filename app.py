@@ -13,7 +13,7 @@ client = openai.OpenAI(api_key=st.secrets["OPENAI_API_KEY"])
 # ----------------------
 # Title
 # ----------------------
-st.title("Ask Me Anything: Anesthesia + Critical Care")
+st.title("Ask Me Anything: Anesthesia")
 
 # ----------------------
 # Privacy Notice
