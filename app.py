@@ -3,7 +3,6 @@ import openai
 from PIL import Image
 import pytesseract
 import io
-import base64
 
 # ----------------------
 # SETUP OpenAI Client Safely
@@ -86,39 +85,38 @@ st.markdown("""
 # ----------------------
 st.markdown("""
 <div style='text-align: center; margin-bottom: 30px;'>
-    <h1 style='font-weight: normal; margin-bottom: 10px;'>
+    <h1 style='font-weight: normal; margin-bottom: 10px; text-align: center;'>
         <span style='color: red;'>&gt;</span> Anesthesia <span style='font-size: 120px; color: blue; margin: 0 10px;'>.</span> Intelligence <span style='color: red;'>&lt;</span>
     </h1>
-    <div style='font-family: "Pacifico", cursive; font-size: 20px; color: #555;'>A.I</div>
+    <div style='font-family: "Pacifico", cursive; font-size: 20px; color: #555; text-align: center;'>A.I</div>
 </div>
 """, unsafe_allow_html=True)
 
 # ----------------------
 # Unified Upload + Text Input
 # ----------------------
-st.markdown("""
+uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed", key="hidden-upload")
+
+if uploaded_file:
+    if uploaded_file.type.startswith("image/"):
+        image = Image.open(uploaded_file)
+        buf = io.BytesIO()
+        image.save(buf, format="PNG")
+        byte_im = buf.getvalue()
+        encoded = base64.b64encode(byte_im).decode()
+        thumbnail_html = f'<img src="data:image/png;base64,{encoded}" class="thumbnail">'
+        upload_html = thumbnail_html
+    else:
+        upload_html = '<span class="upload-label">📄</span>'
+else:
+    upload_html = '<label for="hidden-upload" class="upload-label" id="upload-icon">➕</label>'
+
+st.markdown(f"""
 <div class="flex-container">
-  <input type="file" id="hidden-upload" accept="image/*,application/pdf" style="display:none" onchange="uploadFile(event)">
-  <label for="hidden-upload" class="upload-label" id="upload-icon">➕</label>
+  {upload_html}
   <input id="text-input" name="prompt" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
   <button class="mic-button" disabled>🎤</button>
 </div>
-<script>
-function uploadFile(event) {
-  const file = event.target.files[0];
-  if(file){
-    const reader = new FileReader();
-    reader.onload = function(e){
-      const imgTag = document.createElement('img');
-      imgTag.src = e.target.result;
-      imgTag.className = 'thumbnail';
-      const uploadIcon = document.getElementById('upload-icon');
-      uploadIcon.parentNode.replaceChild(imgTag, uploadIcon);
-    }
-    reader.readAsDataURL(file);
-  }
-}
-</script>
 """, unsafe_allow_html=True)
 
 submit = st.button("🚀 Ask The A.I.", key="ask_button", use_container_width=True)
