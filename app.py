@@ -3,6 +3,7 @@ import openai
 from PIL import Image
 import pytesseract
 import io
+import base64
 
 # ----------------------
 # SETUP OpenAI Client Safely
@@ -41,9 +42,6 @@ st.markdown("""
         color: white;
         font-size: 16px;
       }
-      .flex-container input[type="file"] {
-        display: none;
-      }
       .upload-label, .mic-button {
         background: none;
         border: none;
@@ -80,55 +78,41 @@ st.markdown("""
 # ----------------------
 # Unified Upload + Text Input
 # ----------------------
-uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed")
-
+extracted_text = ""
 uploaded_thumbnail = ""
-if uploaded_file is not None and uploaded_file.type.startswith("image/"):
-    image = Image.open(uploaded_file)
-    image.thumbnail((30, 30))
-    buf = io.BytesIO()
-    image.save(buf, format="PNG")
-    uploaded_thumbnail = buf.getvalue()
+prompt = ""
 
-flex_content = """
+st.markdown("""
 <div class="flex-container">
-  <label for="file-upload" class="upload-label">➕</label>
-"""
-
-if uploaded_thumbnail:
-    flex_content += """
-    <img src="data:image/png;base64,""" + st.base64.b64encode(uploaded_thumbnail).decode() + """" class="thumbnail"/>
-    """
-
-flex_content += """
-  <input id="text-input" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
+  <input type="file" id="hidden-upload" accept="image/*,application/pdf" style="display:none" onchange="uploadFile(event)">
+  <label for="hidden-upload" class="upload-label">➕</label>
+  <input id="text-input" name="prompt" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
   <button class="mic-button">🎤</button>
 </div>
-"""
-
-st.markdown(flex_content, unsafe_allow_html=True)
-
-prompt = st.text_input("", label_visibility="collapsed")
-
-extracted_text = ""
-
-if uploaded_file is not None:
-    with st.spinner("🔄 Processing file..."):
-        if uploaded_file.type.startswith("image/"):
-            image = Image.open(uploaded_file)
-            extracted_text = pytesseract.image_to_string(image)
-        elif uploaded_file.type == "application/pdf":
-            extracted_text = "PDF file uploaded. Please summarize its contents in your query."
+<script>
+function uploadFile(event) {
+  const file = event.target.files[0];
+  if(file){
+    const reader = new FileReader();
+    reader.onload = function(e){
+      const imgTag = document.createElement('img');
+      imgTag.src = e.target.result;
+      imgTag.className = 'thumbnail';
+      document.querySelector('.upload-label').replaceWith(imgTag);
+    }
+    reader.readAsDataURL(file);
+  }
+}
+</script>
+""", unsafe_allow_html=True)
 
 submit = st.button("⏳ Submit Question", use_container_width=True)
 
 if submit:
-    if not prompt and not uploaded_file:
+    if not prompt:
         st.warning("Please enter a question or upload a file.")
     else:
         full_prompt = prompt
-        if extracted_text:
-            full_prompt = f"User provided the following file contents: {extracted_text}\n\nAdditionally, user asked: {prompt}"
 
         with st.spinner("🔄 Thinking..."):
             try:
