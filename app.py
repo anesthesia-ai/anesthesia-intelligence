@@ -3,6 +3,7 @@ import openai
 from PIL import Image
 import pytesseract
 import io
+import base64
 
 # ----------------------
 # SETUP OpenAI Client Safely
@@ -32,6 +33,7 @@ st.markdown("""
         width: 100%;
         max-width: 900px;
         box-shadow: inset 0 0 8px rgba(255, 255, 255, 0.1);
+        position: relative;
       }
       .flex-container input[type="text"] {
         flex: 1;
@@ -73,6 +75,16 @@ st.markdown("""
         background-color: #3d8bfd;
         transition: background-color 0.3s ease;
       }
+      .hidden-upload {
+        position: absolute;
+        top: 10px;
+        left: 10px;
+        width: 40px;
+        height: 40px;
+        opacity: 0;
+        cursor: pointer;
+        z-index: 10;
+      }
       .footer {
         background-color: #333;
         color: white;
@@ -95,7 +107,8 @@ st.markdown("""
 # ----------------------
 # Unified Upload + Text Input
 # ----------------------
-uploaded_file = st.file_uploader("", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed", key="hidden-upload")
+placeholder = st.empty()
+uploaded_file = placeholder.file_uploader("", type=["jpg", "jpeg", "png", "pdf"], label_visibility="collapsed", key="hidden-upload")
 
 if uploaded_file:
     if uploaded_file.type.startswith("image/"):
@@ -104,18 +117,20 @@ if uploaded_file:
         image.save(buf, format="PNG")
         byte_im = buf.getvalue()
         encoded = base64.b64encode(byte_im).decode()
-        thumbnail_html = f'<img src="data:image/png;base64,{encoded}" class="thumbnail">'
-        upload_html = thumbnail_html
+        upload_html = f'<img src="data:image/png;base64,{encoded}" class="thumbnail">'
     else:
         upload_html = '<span class="upload-label">📄</span>'
 else:
-    upload_html = '<label for="hidden-upload" class="upload-label" id="upload-icon">➕</label>'
+    upload_html = '<span class="upload-label">➕</span>'
 
 st.markdown(f"""
 <div class="flex-container">
   {upload_html}
   <input id="text-input" name="prompt" type="text" placeholder="Type your question here (e.g., 'Interpret this TEG, EKG, or Labs', 'Home meds and Anesthesia Considerations', 'Anti-coagulant reversal', 'Make care plan an EGD for EF <20% on an LVAD and Milrinone drip')...">
   <button class="mic-button" disabled>🎤</button>
+  <div style="position:absolute;top:10px;left:10px;width:40px;height:40px;opacity:0;z-index:20;">
+    {placeholder}
+  </div>
 </div>
 """, unsafe_allow_html=True)
 
